@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMR, TDEE & Balanced Diet Builder</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --protein: #ef4444;
+            --carbs: #3b82f6;
+            --fats: #eab308;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+        .calculator-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .form-section {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 600px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 16px;
+            color: var(--text);
+            background-color: #fff;
+        }
+        input:focus, select:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 8px;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        .results-section {
+            padding: 24px;
+            background-color: #fafafa;
+            display: none;
+        }
+        .results-section.active {
+            display: block;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .metric-card h3 {
+            margin: 0 0 4px;
+            font-size: 14px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .macro-box {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .macro-box h3 {
+            margin: 0 0 16px;
+            font-size: 18px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .macro-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .macro-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .macro-label {
+            width: 100px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .bar-bg {
+            flex-grow: 1;
+            background: var(--border);
+            height: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease-out;
+        }
+        .p-fill { background-color: var(--protein); }
+        .c-fill { background-color: var(--carbs); }
+        .f-fill { background-color: var(--fats); }
+        .macro-value {
+            width: 90px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .food-groups {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .food-groups h3 {
+            margin: 0 0 16px;
+            font-size: 18px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .food-item {
+            border: 1px dashed var(--border);
+            padding: 12px;
+            border-radius: 6px;
+            background-color: var(--bg);
+        }
+        .food-item h4 {
+            margin: 0 0 6px;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .food-item p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        .disclaimer {
+            font-size: 11px;
+            color: var(--text-light);
+            text-align: center;
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-container">
+    <div class="header">
+        <h1>BMR, TDEE & Balanced Diet Builder</h1>
+        <p>Calculate your daily energy needs and generate a customized macronutrient plan.</p>
+    </div>
+
+    <div class="form-section">
+        <div class="grid-2">
+            <div class="input-group">
+                <label>Gender</label>
+                <div class="radio-group">
+                    <label class="radio-label"><input type="radio" name="gender" value="male" checked> Male</label>
+                    <label class="radio-label"><input type="radio" name="gender" value="female"> Female</label>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="age">Age (years)</label>
+                <input type="number" id="age" min="15" max="100" value="30" required>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label for="weight">Weight (kg)</label>
+                <input type="number" id="weight" min="30" max="250" value="70" required>
+            </div>
+            <div class="input-group">
+                <label for="height">Height (cm)</label>
+                <input type="number" id="height" min="100" max="250" value="170" required>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="input-group">
+                <label for="activity">Activity Level</label>
+                <select id="activity">
+                    <option value="1.2">Sedentary (Little or no exercise)</option>
+                    <option value="1.375">Lightly Active (Exercise 1-3 days/week)</option>
+                    <option value="1.55" selected>Moderately Active (Exercise 3-5 days/week)</option>
+                    <option value="1.725">Very Active (Hard exercise 6-7 days/week)</option>
+                    <option value="1.9">Extra Active (Very hard exercise & physical job)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="goal">Fitness Goal</label>
+                <select id="goal">
+                    <option value="lose">Weight Loss (-500 kcal)</option>
+                    <option value="maintain" selected>Maintenance (TDEE)</option>
+                    <option value="gain">Weight Gain (+500 kcal)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="input-group" style="grid-column: span 2;">
+                <label for="diet-type">Diet Profile Preset</label>
+                <select id="diet-type">
+                    <option value="balanced" selected>Balanced (40% Carbs, 30% Protein, 30% Fat)</option>
+                    <option value="lowcarb">Low-Carb / High-Protein (25% Carbs, 45% Protein, 30% Fat)</option>
+                    <option value="highcarb">High-Carb / Endurance (55% Carbs, 20% Protein, 25% Fat)</option>
+                    <option value="keto">Keto-Style (5% Carbs, 25% Protein, 70% Fat)</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="calculateNutrition()">Calculate & Build Diet</button>
+    </div>
+
+    <div id="results" class="results-section">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Your BMR</h3>
+                <div id="bmr-val" class="value">0 kcal</div>
+            </div>
+            <div class="metric-card">
+                <h3>Target Calories</h3>
+                <div id="target-val" class="value">0 kcal</div>
+            </div>
+        </div>
+
+        <div class="macro-box">
+            <h3>Daily Macronutrient Targets</h3>
+            <div class="macro-bars">
+                <div class="macro-bar-container">
+                    <span class="macro-label">Protein</span>
+                    <div class="bar-bg"><div id="p-bar" class="bar-fill p-fill"></div></div>
+                    <span id="p-val" class="macro-value">0g</span>
+                </div>
+                <div class="macro-bar-container">
+                    <span class="macro-label">Carbs</span>
+                    <div class="bar-bg"><div id="c-bar" class="bar-fill c-fill"></div></div>
+                    <span id="c-val" class="macro-value">0g</span>
+                </div>
+                <div class="macro-bar-container">
+                    <span class="macro-label">Fats</span>
+                    <div class="bar-bg"><div id="f-bar" class="bar-fill f-fill"></div></div>
+                    <span id="f-val" class="macro-value">0g</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="food-groups">
+            <h3>Recommended Portion Distributions</h3>
+            <div class="food-grid">
+                <div class="food-item">
+                    <h4>Lean Proteins</h4>
+                    <p id="food-protein">Calculating servings...</p>
+                </div>
+                <div class="food-item">
+                    <h4>Complex Carbs & Grains</h4>
+                    <p id="food-carbs">Calculating servings...</p>
+                </div>
+                <div class="food-item">
+                    <h4>Healthy Fats</h4>
+                    <p id="food-fats">Calculating servings...</p>
+                </div>
+                <div class="food-item">
+                    <h4>Vegetables & Greens</h4>
+                    <p id="food-veg">3-5 cups daily minimum (Free foods)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="disclaimer">
+        This tool is for informational purposes only. For medical advice or diagnosis, consult a professional. AI responses may include mistakes.
+    </div>
+</div>
+
+<script>
+function calculateNutrition() {
+    // Inputs
+    const gender = document.querySelector('input[name="gender"]:checked').value;
+    const age = parseFloat(document.getElementById('age').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const height = parseFloat(document.getElementById('height').value);
+    const activity = parseFloat(document.getElementById('activity').value);
+    const goal = document.getElementById('goal').value;
+    const dietType = document.getElementById('diet-type').value;
+
+    if (!age || !weight || !height) return alert("Please fill in all values.");
+
+    // 1. Calculate BMR (Mifflin-St Jeor)
+    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+    if (gender === 'male') {
+        bmr += 5;
+    } else {
+        bmr -= 161;
+    }
+
+    // 2. Calculate TDEE & Target Calories
+    const tdee = bmr * activity;
+    let targetCalories = tdee;
+    if (goal === 'lose') targetCalories -= 500;
+    if (goal === 'gain') targetCalories += 500;
+    if (targetCalories < 1200) targetCalories = 1200; // Safe floor
+
+    // 3. Macro Split Percentages
+    let pPct, cPct, fPct;
+    switch(dietType) {
+        case 'lowcarb':   pPct = 0.45; cPct = 0.25; fPct = 0.30; break;
+        case 'highcarb':  pPct = 0.20; cPct = 0.55; fPct = 0.25; break;
+        case 'keto':      pPct = 0.25; cPct = 0.05; fPct = 0.70; break;
+        default:          pPct = 0.30; cPct = 0.40; fPct = 0.30; // Balanced
+    }
+
+    // 4. Gram Calculations (Protein/Carb = 4 kcal/g, Fat = 9 kcal/g)
+    const proteinGrams = Math.round((targetCalories * pPct) / 4);
+    const carbGrams = Math.round((targetCalories * cPct) / 4);
+    const fatGrams = Math.round((targetCalories * fPct) / 9);
+
+    // 5. Food Group Portion Inferences (Approximate serving metrics)
+    // 1 serving lean protein ~ 25g protein (e.g., 3-4 oz chicken/fish/tofu)
+    const proteinServings = Math.max(1, Math.round(proteinGrams / 25));
+    // 1 serving complex carbs ~ 25g carbs (e.g., 1/2 cup cooked rice/oats, 1 slice bread)
+    const carbServings = Math.max(1, Math.round(carbGrams / 25));
+    // 1 serving healthy fats ~ 10g fats (e.g., 1 tbsp olive oil, 1/4 avocado, 15g nuts)
+    const fatServings = Math.max(1, Math.round(fatGrams / 10));
+
+    // Update UI Metrics
+    document.getElementById('bmr-val').innerText = Math.round(bmr) + " kcal";
+    document.getElementById('target-val').innerText = Math.round(targetCalories) + " kcal";
+
+    // Update Macro UI
+    document.getElementById('p-val').innerText = proteinGrams + "g (" + Math.round(pPct*100) + "%)";
+    document.getElementById('c-val').innerText = carbGrams + "g (" + Math.round(cPct*100) + "%)";
+    document.getElementById('f-val').innerText = fatGrams + "g (" + Math.round(fPct*100) + "%)";
+
+    // Set Max Widths for bars dynamically based on ratios
+    const maxVal = Math.max(pPct, cPct, fPct);
+    document.getElementById('p-bar').style.width = (pPct / maxVal * 100) + "%";
+    document.getElementById('c-bar').style.width = (cPct / maxVal * 100) + "%";
+    document.getElementById('f-bar').style.width = (fPct / maxVal * 100) + "%";
+
+    // Update Food Servings text
+    document.getElementById('food-protein').innerText = `~${proteinServings} servings daily (e.g., 3-4 oz chicken breasts, tofu, or white fish equals 1 serving).`;
+    document.getElementById('food-carbs').innerText = `~${carbServings} servings daily (e.g., 1/2 cup cooked brown rice or oatmeal equals 1 serving).`;
+    document.getElementById('food-fats').innerText = `~${fatServings} servings daily (e.g., 1 tablespoon olive oil or 1/4 avocado equals 1 serving).`;
+
+    // Reveal results panel
+    document.getElementById('results').classList.add('active');
+}
+</script>
+
+</body>
+</html>
